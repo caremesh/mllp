@@ -1,6 +1,6 @@
 {
   "name": "@caremesh/mllp",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Fork of MLLP node with support for Node versions greater than 8.x.  Other bug fixes may follow, or it may be discontinued if the main branch updates.",
   "main": "index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "node": ">=8.x.x"
   },
   "dependencies": {
+    "bunyan": "^1.8.12",
     "hl7": "1.x.x"
   }
 }
