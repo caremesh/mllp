@@ -1,3 +1,5 @@
+const bunyan = require('bunyan');
+
 var net = require('net');
 var hl7 = require('hl7');
 var util = require('util');
@@ -38,11 +40,11 @@ function MLLPServer(host, port, logger) {
     this.message = '';
     var HOST = host || '127.0.0.1';
     var PORT = port || 6969;
-    logger = logger || console.log;
+    logger = logger || bunyan.createLogger({name: 'mllp'});
 
     var Server = net.createServer(function (sock) {
 
-        logger('CONNECTED: ' + sock.remoteAddress + ':' + sock.remotePort);
+        logger.debug('CONNECTED: ' + sock.remoteAddress + ':' + sock.remotePort);
 
         function ackn(data, ack_type) {
             //get message ID
@@ -65,7 +67,7 @@ function MLLPServer(host, port, logger) {
         sock.on('data', function (data) {
             data = data.toString();
             //strip separators
-            logger("DATA:\nfrom " + sock.remoteAddress + ':\n' + data.split("\r").join("\n"));
+            // logger("DATA:\nfrom " + sock.remoteAddress + ':\n' + data.split("\r").join("\n"));
 
             if (data.indexOf(VT) > -1) {
                 self.message = '';
@@ -76,7 +78,7 @@ function MLLPServer(host, port, logger) {
             if (data.indexOf(FS + CR) > -1) {
                 self.message = self.message.replace(FS + CR, '');
                 var data2 = hl7.parseString(self.message);
-                logger("Message:\r\n" + self.message + "\r\n\r\n");
+                // logger("Message:\r\n" + self.message + "\r\n\r\n");
                 /**
                  * MLLP HL7 Event. Fired when a HL7 Message is received.
                  * @event MLLPServer#hl7
@@ -92,7 +94,7 @@ function MLLPServer(host, port, logger) {
         });
 
         sock.on('close', function (data) {
-            logger('CLOSED: ' + sock.remoteAddress + ' ' + sock.remotePort);
+            logger.debug('CLOSED: ' + sock.remoteAddress + ' ' + sock.remotePort);
         });
 
     });
@@ -102,17 +104,17 @@ function MLLPServer(host, port, logger) {
             host: receivingHost,
             port: receivingPort
         }, function () {
-            logger('Sending data to ' + receivingHost + ':' + receivingPort);
+            logger.debug('Sending data to ' + receivingHost + ':' + receivingPort);
             sendingClient.write(VT + hl7Data + FS + CR);
         });
 
         var _terminate = function () {
-            logger('closing connection with ' + receivingHost + ':' + receivingPort);
+            logger.debug('closing connection with ' + receivingHost + ':' + receivingPort);
             sendingClient.end();
         };
 
         sendingClient.on('data', function (rawAckData) {
-            logger(receivingHost + ':' + receivingPort + ' ACKED data');
+            logger.debug(receivingHost + ':' + receivingPort + ' ACKED data');
 
             var ackData = rawAckData
                 .toString() // Buffer -> String
